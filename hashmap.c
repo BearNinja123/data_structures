@@ -192,7 +192,7 @@ int main() {
   }*/
 
   {
-    Map m = make_map(1000);
+    Map m = make_map((int)(1<<10));
     map_insert_value(m, "hi", "a");
     map_insert_value(m, "joe", "a");
     map_insert_value(m, "johnny", "a");
