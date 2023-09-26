@@ -5,23 +5,23 @@
 // hash map implementation
 
 // linked list data structure
-typedef struct Node {
+typedef struct node_t {
   char *data;
   char *value;
-  struct Node *next;
-} Node;
+  struct node_t *next;
+} node_t;
 
-typedef struct LL {
-  Node *head;
-  Node *tail;
-} LL;
+typedef struct ll_t {
+  node_t *head;
+  node_t *tail;
+} ll_t;
 
-void insert_node(LL *ll, Node *added) {
+void insert_node(ll_t *ll, node_t *added) {
   added->next = ll->head;
   ll->head = added;
 }
 
-void append_node(LL *ll, Node *added) {
+void append_node(ll_t *ll, node_t *added) {
   if (!ll->tail)
     ll->head = ll->tail = added;
   else {
@@ -30,8 +30,8 @@ void append_node(LL *ll, Node *added) {
   }
 }
 
-Node * value_node(LL *ll, char *data) {
-  Node *curr = ll->head;
+node_t * value_node(ll_t *ll, char *data) {
+  node_t *curr = ll->head;
   while (curr) {
     //printf("curr %p %s %s %p %p\n", curr, curr->data, ll->tail->data, ll->tail->next, curr->next);
     if (strcmp(curr->data, data) == 0)
@@ -41,8 +41,8 @@ Node * value_node(LL *ll, char *data) {
   return NULL; // not found
 }
 
-void print_ll(LL *ll) {
-  Node *curr = ll->head;
+void print_ll(ll_t *ll) {
+  node_t *curr = ll->head;
   printf("[");
   while (curr) {
     printf("%s, ", curr->data);
@@ -54,7 +54,7 @@ void print_ll(LL *ll) {
 // hash map
 typedef struct Map {
   int max_size;
-  LL *idxs;
+  ll_t *idxs;
 } Map; 
 
 unsigned long
@@ -67,27 +67,27 @@ hash(char *str) { // https://stackoverflow.com/questions/7666509/hash-function-f
 }
 
 Map make_map(int max_size) {
-  LL *idxs = (LL *)calloc(max_size, sizeof(LL)); // must use calloc since it essentially assigns all elements to linked lists with null heads
+  ll_t *idxs = (ll_t *)calloc(max_size, sizeof(ll_t)); // must use calloc since it essentially assigns all elements to linked lists with null heads
   Map ret = {max_size, idxs};
   return ret;
 }
 
 void set_insert_value(Map m, char *c) {
-  Node *n = (Node *)malloc(sizeof(Node *));
+  node_t *n = (node_t *)malloc(sizeof(node_t *));
   n->data = c;
   n->next = NULL;
-  LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
+  ll_t *place_ll = &(m.idxs[hash(c) % m.max_size]);
   if (!value_node(place_ll, c))
     append_node(place_ll, n);
 }
 
 void map_insert_value(Map m, char *c, char *v) {
-  Node *n = (Node *)malloc(sizeof(Node *));
+  node_t *n = (node_t *)malloc(sizeof(node_t *));
   n->data = c;
   n->value = v;
   n->next = NULL;
-  LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
-  Node *update_node = value_node(place_ll, c);
+  ll_t *place_ll = &(m.idxs[hash(c) % m.max_size]);
+  node_t *update_node = value_node(place_ll, c);
   if (!update_node)
     append_node(place_ll, n);
   else {
@@ -97,16 +97,16 @@ void map_insert_value(Map m, char *c, char *v) {
 }
 
 int contains(Map m, char *c) {
-  LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
+  ll_t *place_ll = &(m.idxs[hash(c) % m.max_size]);
   return value_node(place_ll, c) != NULL;
 }
 
 void remove_value(Map m, char *c) {
-  LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
+  ll_t *place_ll = &(m.idxs[hash(c) % m.max_size]);
 
   // remove value in linked list, equivalent to rm_node but comparing values instead of mem addresses
-  Node **curr = &(place_ll->head);
-  Node *past = NULL;
+  node_t **curr = &(place_ll->head);
+  node_t *past = NULL;
   while (*curr && strcmp((*curr)->data, c) != 0) {
     past = *curr;
     curr = &(*curr)->next;
@@ -114,20 +114,20 @@ void remove_value(Map m, char *c) {
   if (place_ll->tail && strcmp(place_ll->tail->data, c) == 0)
     place_ll->tail = past;
   if (*curr) {
-    Node *rm_node = *curr;
+    node_t *rm_node = *curr;
     *curr = rm_node->next;
     free(rm_node);
   }
 }
 
 char * map_get(Map m, char *c) {
-  LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
-  Node *n = value_node(place_ll, c);
+  ll_t *place_ll = &(m.idxs[hash(c) % m.max_size]);
+  node_t *n = value_node(place_ll, c);
   return n ? n->value : NULL;
 }
 
 void print_set(Map m) {
-  Node *curr;
+  node_t *curr;
   printf("{");
   for (int i = 0; i < m.max_size; ++i) {
     curr = m.idxs[i].head;
@@ -140,7 +140,7 @@ void print_set(Map m) {
 }
 
 void print_map(Map m) {
-  Node *curr;
+  node_t *curr;
   printf("{");
   for (int i = 0; i < m.max_size; ++i) {
     curr = m.idxs[i].head;
@@ -153,10 +153,10 @@ void print_map(Map m) {
 }
 
 void free_map(Map m) {
-  Node *curr;
+  node_t *curr;
   for (int i = 0; i < m.max_size; ++i) {
     curr = m.idxs[i].head;
-    Node *rm;
+    node_t *rm;
     while (curr) {
       rm = curr;
       curr = curr->next;

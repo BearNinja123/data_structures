@@ -3,86 +3,86 @@
 
 // doubly linked list data structure
 
-typedef struct Node {
+typedef struct node_t {
   int data;
-  struct Node *next;
-  struct Node *prev;
-} Node;
+  struct node_t *next;
+  struct node_t *prev;
+} node_t;
 
-typedef struct LL {
-  Node *head;
-} LL;
+typedef struct ll_t {
+  node_t *head;
+} ll_t;
 
-void add_node(LL *ll, Node *added) { // more pointers = higher ground to modify variables?
-  Node *curr = ll->head;
-  if (curr == NULL) {
+void add_node(ll_t *ll, node_t *added) { // more pointers = higher ground to modify variables?
+  node_t *curr = ll->head;
+  if (curr == NUll_t) {
     ll->head = added;
     return;
   }
 
-  while (curr->next != NULL)
+  while (curr->next != NUll_t)
     curr = curr->next;
   curr->next = added;
   added->prev = curr;
 }
 
-void rm_node(LL *ll, Node *rm_node) { // TODO: stinky
-  Node *curr = ll->head;
-  if (curr == NULL) {
-    ll->head = NULL;
+void rm_node(ll_t *ll, node_t *rm_node) { // TODO: stinky
+  node_t *curr = ll->head;
+  if (curr == NUll_t) {
+    ll->head = NUll_t;
     return;
   }
   if (curr == rm_node) {
     ll->head = rm_node->next;
-    if (ll->head != NULL)
-      ll->head->prev = NULL;
+    if (ll->head != NUll_t)
+      ll->head->prev = NUll_t;
     return;
   }
 
-  while (curr->next != NULL && curr->next != rm_node)
+  while (curr->next != NUll_t && curr->next != rm_node)
     curr = curr->next;
-  if (curr->next != NULL) {
-    Node *skip = rm_node->next;
+  if (curr->next != NUll_t) {
+    node_t *skip = rm_node->next;
     curr->next = skip;
-    if (skip != NULL)
+    if (skip != NUll_t)
       skip->prev = curr;
   }
 }
 
-void print_ll(LL *ll) {
-  Node *curr = ll->head;
+void print_ll(ll_t *ll) {
+  node_t *curr = ll->head;
   printf("[");
-  while (curr != NULL) {
+  while (curr != NUll_t) {
     printf("%d, ", curr->data);
     curr = curr->next;
   }
   printf("]\n");
 }
 
-void rev_ll(LL *ll) {
-  Node **curr = &(ll->head);
-  if (curr == NULL)
+void rev_ll(ll_t *ll) {
+  node_t **curr = &(ll->head);
+  if (curr == NUll_t)
     return;
 
-  while ((*curr)->next != NULL) {
-    Node *tmp = (*curr)->next;
+  while ((*curr)->next != NUll_t) {
+    node_t *tmp = (*curr)->next;
     (*curr)->next = (*curr)->prev;
     (*curr)->prev = tmp;
     *curr = tmp;
   }
   (*curr)->next = (*curr)->prev;
-  (*curr)->prev = NULL;
+  (*curr)->prev = NUll_t;
 }
 
 int main() {
   {
-    LL ll = {NULL};
+    ll_t ll = {NUll_t};
     const int L = 10;
-    Node *ns = (Node *)malloc(sizeof(Node) * L);
+    node_t *ns = (node_t *)malloc(sizeof(node_t) * L);
     for (int i = 0; i < L; ++i) {
       ns[i].data = i;
-      ns[i].prev = NULL;
-      ns[i].next = NULL;
+      ns[i].prev = NUll_t;
+      ns[i].next = NUll_t;
       add_node(&ll, &ns[i]);
     }
     print_ll(&ll);
@@ -118,8 +118,8 @@ int main() {
   }
 
   {
-    LL ll = {NULL};
-    Node a = {0, NULL};
+    ll_t ll = {NUll_t};
+    node_t a = {0, NUll_t};
     add_node(&ll, &a);
     print_ll(&ll);
     rm_node(&ll, &a);

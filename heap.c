@@ -3,25 +3,25 @@
 
 // Min heap data structure
 
-typedef struct Heap {
+typedef struct heap_t {
   int max_size;
   int size;
   int *data;
-} Heap;
+} heap_t;
 
-Heap init_heap() {
+heap_t init_heap() {
   int *data = (int *)malloc(sizeof(int));
-  Heap ret = {1, 0, data};
+  heap_t ret = {1, 0, data};
   return ret;
 }
 
-void swap(Heap *h, int i1, int i2) {
+void swap(heap_t *h, int i1, int i2) {
   int tmp = h->data[i1];
   h->data[i1] = h->data[i2];
   h->data[i2] = tmp;
 }
 
-void siftup(Heap *h, int index) {
+void siftup(heap_t *h, int index) {
   int child, parent;
   child = h->data[index];
   parent = h->data[index/2];
@@ -32,7 +32,7 @@ void siftup(Heap *h, int index) {
   }
 }
 
-void siftdown(Heap *h, int index) {
+void siftdown(heap_t *h, int index) {
   int l_child, r_child, min_idx;
   int parent = h->data[index];
   while (index < h->size / 2) {
@@ -49,7 +49,7 @@ void siftdown(Heap *h, int index) {
   }
 }
 
-void push(Heap *h, int d) {
+void push(heap_t *h, int d) {
   if (h->size == h->max_size) {
     int *data = (int *)malloc(2 * h->max_size * sizeof(int));
     for (int i = 0; i < h->max_size; ++i)
@@ -62,13 +62,13 @@ void push(Heap *h, int d) {
   siftup(h, h->size - 1);
 }
 
-int pop(Heap *h) {
+int pop(heap_t *h) {
   swap(h, 0, --h->size);
   siftdown(h, 0);
   return h->data[h->size];
 }
 
-void print_heap(Heap h) {
+void print_heap(heap_t h) {
   printf("[");
   for (int i = 0; i < h.size; ++i)
     printf("%d, ", h.data[i]);
@@ -76,7 +76,7 @@ void print_heap(Heap h) {
 }
 
 int main() {
-  Heap h = init_heap();
+  heap_t h = init_heap();
   for (int i = 0; i < 10; ++i) {
     printf("Adding %d to heap\n", 10-i);
     push(&h, 10-i);
