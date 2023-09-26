@@ -22,7 +22,7 @@ void insert_node(LL *ll, Node *added) {
 }
 
 void append_node(LL *ll, Node *added) {
-  if (ll->tail == NULL)
+  if (!ll->tail)
     ll->head = ll->tail = added;
   else {
     ll->tail->next = added;
@@ -30,22 +30,10 @@ void append_node(LL *ll, Node *added) {
   }
 }
 
-void rm_node(LL *ll, Node *rm_node) {
-  Node **curr = &(ll->head);
-  Node *past = NULL;
-  while (*curr != NULL && *curr != rm_node) {
-    past = *curr;
-    curr = &((*curr)->next);
-  }
-  if (*curr != NULL)
-    *curr = rm_node->next;
-  if (ll->tail == rm_node)
-    ll->tail = past;
-}
-
 Node * value_node(LL *ll, char *data) {
   Node *curr = ll->head;
-  while (curr != NULL) {
+  while (curr) {
+    //printf("curr %p %s %s %p %p\n", curr, curr->data, ll->tail->data, ll->tail->next, curr->next);
     if (strcmp(curr->data, data) == 0)
       return curr;
     curr = curr->next;
@@ -55,12 +43,8 @@ Node * value_node(LL *ll, char *data) {
 
 void print_ll(LL *ll) {
   Node *curr = ll->head;
-  if (ll->head == NULL)
-    printf("Head: %p | Tail: %p\n", ll->head, ll->tail);
-  else
-    printf("Head: %s (%p) | Tail: %s (%p)\n", ll->head->data, ll->head, ll->tail->data, ll->tail);
   printf("[");
-  while (curr != NULL) {
+  while (curr) {
     printf("%s, ", curr->data);
     curr = curr->next;
   }
@@ -68,7 +52,6 @@ void print_ll(LL *ll) {
 }
 
 // hash map
-//
 typedef struct Map {
   int max_size;
   LL *idxs;
@@ -84,7 +67,7 @@ hash(char *str) { // https://stackoverflow.com/questions/7666509/hash-function-f
 }
 
 Map make_map(int max_size) {
-  LL *idxs = (LL *)malloc(max_size * sizeof(LL));
+  LL *idxs = (LL *)calloc(max_size, sizeof(LL)); // must use calloc since it essentially assigns all elements to linked lists with null heads
   Map ret = {max_size, idxs};
   return ret;
 }
@@ -92,8 +75,9 @@ Map make_map(int max_size) {
 void set_insert_value(Map m, char *c) {
   Node *n = (Node *)malloc(sizeof(Node *));
   n->data = c;
+  n->next = NULL;
   LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
-  if (value_node(place_ll, c) == NULL)
+  if (!value_node(place_ll, c))
     append_node(place_ll, n);
 }
 
@@ -101,12 +85,15 @@ void map_insert_value(Map m, char *c, char *v) {
   Node *n = (Node *)malloc(sizeof(Node *));
   n->data = c;
   n->value = v;
+  n->next = NULL;
   LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
   Node *update_node = value_node(place_ll, c);
-  if (update_node == NULL)
+  if (!update_node)
     append_node(place_ll, n);
-  else
+  else {
     update_node->value = v;
+    free(n);
+  }
 }
 
 int contains(Map m, char *c) {
@@ -120,20 +107,23 @@ void remove_value(Map m, char *c) {
   // remove value in linked list, equivalent to rm_node but comparing values instead of mem addresses
   Node **curr = &(place_ll->head);
   Node *past = NULL;
-  while (*curr != NULL && strcmp((*curr)->data, c) != 0) {
+  while (*curr && strcmp((*curr)->data, c) != 0) {
     past = *curr;
-    curr = &((*curr)->next);
+    curr = &(*curr)->next;
   }
-  if (*curr != NULL)
-    *curr = (*curr)->next;
-  if (strcmp(place_ll->tail->data, c) == 0)
+  if (place_ll->tail && strcmp(place_ll->tail->data, c) == 0)
     place_ll->tail = past;
+  if (*curr) {
+    Node *rm_node = *curr;
+    *curr = rm_node->next;
+    free(rm_node);
+  }
 }
 
 char * map_get(Map m, char *c) {
   LL *place_ll = &(m.idxs[hash(c) % m.max_size]);
   Node *n = value_node(place_ll, c);
-  return (n == NULL) ? NULL : n->value;
+  return n ? n->value : NULL;
 }
 
 void print_set(Map m) {
@@ -141,7 +131,7 @@ void print_set(Map m) {
   printf("{");
   for (int i = 0; i < m.max_size; ++i) {
     curr = m.idxs[i].head;
-    while (curr != NULL) {
+    while (curr) {
       printf("%s, ", curr->data);
       curr = curr->next;
     }
@@ -154,7 +144,7 @@ void print_map(Map m) {
   printf("{");
   for (int i = 0; i < m.max_size; ++i) {
     curr = m.idxs[i].head;
-    while (curr != NULL) {
+    while (curr) {
       printf("%s: %s, ", curr->data, curr->value);
       curr = curr->next;
     }
@@ -162,63 +152,65 @@ void print_map(Map m) {
   printf("}\n");
 }
 
-int main() {
-  /*{
-    LL ll = {NULL};
-    const int L = 10; 
-    Node *ns = (Node *)malloc(sizeof(Node) * L);
-    char buf[L][20];
-    for (int i = 0; i < L; ++i) {
-      sprintf(buf[i], "%d", i);
-      ns[i].data = buf[i];
-      append_node(&ll, &ns[i]);
+void free_map(Map m) {
+  Node *curr;
+  for (int i = 0; i < m.max_size; ++i) {
+    curr = m.idxs[i].head;
+    Node *rm;
+    while (curr) {
+      rm = curr;
+      curr = curr->next;
+      free(rm);
     }
-    print_ll(&ll);
-    rm_node(&ll, &ns[9]);
-    print_ll(&ll);
-    rm_node(&ll, &ns[4]);
-    print_ll(&ll);
-    rm_node(&ll, &ns[0]);
-    print_ll(&ll);
   }
+  free(m.idxs);
+}
 
-  {
-    LL ll = {NULL};
-    Node a = {"asdf", NULL, NULL};
-    append_node(&ll, &a);
-    print_ll(&ll);
-    rm_node(&ll, &a);
-    print_ll(&ll);
-  }*/
-
-  {
-    Map m = make_map((int)(1<<10));
-    map_insert_value(m, "hi", "a");
-    map_insert_value(m, "joe", "a");
-    map_insert_value(m, "johnny", "a");
-    map_insert_value(m, "johnny", "b");
-    map_insert_value(m, "alpha", "a");
-    map_insert_value(m, "alpha", "b");
-    map_insert_value(m, "alpha", "c");
-    map_insert_value(m, "alpha", "d");
-    map_insert_value(m, "alpha", "e");
-    print_set(m);
-    print_map(m);
-    printf("Map contains %s: %d\n", "hi", contains(m, "hi"));
-    printf("Map contains %s: %d\n", "joe", contains(m, "joe"));
-    printf("Map contains %s: %d\n", "johnny", contains(m, "johnny"));
-    printf("Map contains %s: %d\n", "alpha", contains(m, "alpha"));
-    printf("Map contains %s: %d\n", "Alpha", contains(m, "Alpha"));
-    printf("Map[%s]: %s\n", "hi", map_get(m, "hi"));
-    printf("Map[%s]: %s\n", "joe", map_get(m, "joe"));
-    printf("Map[%s]: %s\n", "johnny", map_get(m, "johnny"));
-    printf("Map[%s]: %s\n", "alpha", map_get(m, "alpha"));
-    printf("Map[%s]: %s\n", "Alpha", map_get(m, "Alpha"));
-    remove_value(m, "alpha");
-    print_map(m);
-    printf("Map[%s]: %s\n", "alpha", map_get(m, "alpha"));
-    map_insert_value(m, "alpha", "bravo");
-    print_map(m);
-  }
+int main() {
+  Map m = make_map((int)(1<<10));
+  map_insert_value(m, "hi", "a");
+  map_insert_value(m, "joe", "a");
+  map_insert_value(m, "johnny", "a");
+  map_insert_value(m, "johnny", "b");
+  map_insert_value(m, "alpha", "a");
+  map_insert_value(m, "alpha", "b");
+  map_insert_value(m, "alpha", "c");
+  map_insert_value(m, "alpha", "d");
+  map_insert_value(m, "alpha", "e");
+  print_set(m);
+  print_map(m);
+  printf("Map contains %s: %d\n", "hi", contains(m, "hi"));
+  printf("Map contains %s: %d\n", "joe", contains(m, "joe"));
+  printf("Map contains %s: %d\n", "johnny", contains(m, "johnny"));
+  printf("Map contains %s: %d\n", "alpha", contains(m, "alpha"));
+  printf("Map contains %s: %d\n", "Alpha", contains(m, "Alpha"));
+  printf("Map[%s]: %s\n", "hi", map_get(m, "hi"));
+  printf("Map[%s]: %s\n", "joe", map_get(m, "joe"));
+  printf("Map[%s]: %s\n", "johnny", map_get(m, "johnny"));
+  printf("Map[%s]: %s\n", "alpha", map_get(m, "alpha"));
+  printf("Map[%s]: %s\n", "Alpha", map_get(m, "Alpha"));
+  printf("Remove alpha\n");
+  remove_value(m, "alpha");
+  print_map(m);
+  printf("Attempt to remove alpha again\n");
+  remove_value(m, "alpha");
+  print_map(m);
+  printf("Map[%s]: %s\n", "alpha", map_get(m, "alpha"));
+  printf("Map[alpha] = bravo\n");
+  map_insert_value(m, "alpha", "bravo");
+  print_map(m);
+  printf("Remove alpha\n");
+  remove_value(m, "alpha");
+  print_map(m);
+  printf("Remove hi\n");
+  remove_value(m, "hi");
+  print_map(m);
+  printf("Remove joe\n");
+  remove_value(m, "joe");
+  print_map(m);
+  printf("Remove johnny\n");
+  remove_value(m, "johnny");
+  print_map(m);
+  free_map(m);
   return 0;
 }
